@@ -3,6 +3,7 @@ import { ZoomIn, ZoomOut } from 'lucide-react';
 
 import TimelineRow from './TimelineRow';
 import TaskDetailSidebar from './TaskDetailSidebar';
+import RowDetailsSideBar from './RowDetailsSideBar';
 import TimelineLabel from './TimelineLabel';
 
 import { useTimelineDataStore } from '../../store/useTimelineDataStore';
@@ -30,16 +31,27 @@ const TimelineView = ({ rows, tasks }: props) => {
    const [taskIdDetail, setTaskIdDetail] = useState<string | null>(null);
    const [taskDetails, setTaskDetails] = useState<TimelineTask | null>(null);
 
+   // Rearranging tasks into their respective rows
+   const temp = attachTasksToRows(rows, tasks);
+
    useEffect(() => {
       // find task details
       if (taskIdDetail) {
-         const taskDetails = tasks[taskIdDetail];
-         setTaskDetails(taskDetails);
-      }
-   }, [taskIdDetail]);
+         for (const row of data) {
+            const foundTask = row.tasks.find(
+               (task) => task.id === taskIdDetail
+            );
+            if (foundTask) {
+               setTaskDetails(foundTask);
+               console.log('Found Task Details:', foundTask);
 
-   // Rearranging tasks into their respective rows
-   const temp = attachTasksToRows(rows, tasks);
+               break;
+            }
+         }
+      }
+
+      // console.log(data);
+   }, [taskIdDetail]);
 
    useEffect(() => {
       setData(temp);
@@ -85,12 +97,13 @@ const TimelineView = ({ rows, tasks }: props) => {
 
    return (
       <div>
-         <div className="relative grid grid-cols-[200px_auto_200px] h-[500px] border border-gray-300 rounded overflow-scroll">
-            <TaskDetailSidebar
-               taskDetails={taskDetails}
-               handleSetTaskDetails={handleSetTaskDetails}
-            />
-            <div className="w-full overflow-scroll">
+         <div
+            className={`relative grid ${
+               taskDetails ? 'grid-cols-[auto_300px]' : 'grid-cols-[auto]'
+            } h-[500px] border border-gray-300 rounded overflow-scroll`}
+         >
+            <div className="grid grid-cols-[200px_auto] overflow-scroll">
+               {data && <RowDetailsSideBar data={data} />}
                <div className="flex flex-col gap-2 relative w-fit h-fit rounded bg-white">
                   <div className="overflow-x-auto relative border-b border-gray-300">
                      {/* Current day red line */}
@@ -112,36 +125,42 @@ const TimelineView = ({ rows, tasks }: props) => {
                            row={row}
                            minDate={minDate}
                            setTaskIdDetail={setTaskIdDetail}
+                           updatedData={updatedData}
                         />
                      ))}
+                     {data.length === 0 && (
+                        <p className="text-center my-5">No rows available</p>
+                     )}
                   </div>
                </div>
             </div>
 
-            <div className="absolute bottom-5 right-[200px]">
-               <button
-                  className={`p-2 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50 border border-gray-300 ${
-                     pixelPerDay <= 10 ? 'cursor-not-allowed' : 'cursor-pointer'
-                  }`}
-                  onClick={zoomOut}
-                  disabled={pixelPerDay <= 10}
-               >
-                  <ZoomOut />
-               </button>
-               <button
-                  className={`p-2 mx-5 rounded border border-gray-300 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 ${
-                     pixelPerDay >= 70 ? 'cursor-not-allowed' : 'cursor-pointer'
-                  }`}
-                  onClick={zoomIn}
-                  disabled={pixelPerDay >= 70}
-               >
-                  <ZoomIn />
-               </button>
-            </div>
-            <TaskDetailSidebar
-               taskDetails={taskDetails}
-               handleSetTaskDetails={handleSetTaskDetails}
-            />
+            {!!taskDetails && (
+               <TaskDetailSidebar
+                  taskDetails={taskDetails}
+                  handleSetTaskDetails={handleSetTaskDetails}
+               />
+            )}
+         </div>
+         <div className="">
+            <button
+               className={`p-2 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50 border border-gray-300 ${
+                  pixelPerDay <= 10 ? 'cursor-not-allowed' : 'cursor-pointer'
+               }`}
+               onClick={zoomOut}
+               disabled={pixelPerDay <= 10}
+            >
+               <ZoomOut />
+            </button>
+            <button
+               className={`p-2 mx-5 rounded border border-gray-300 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 ${
+                  pixelPerDay >= 70 ? 'cursor-not-allowed' : 'cursor-pointer'
+               }`}
+               onClick={zoomIn}
+               disabled={pixelPerDay >= 70}
+            >
+               <ZoomIn />
+            </button>
          </div>
       </div>
    );

@@ -16,9 +16,15 @@ interface TaskBarProps {
    task: TaskWithLevel;
    minDate?: Date;
    setTaskIdDetail: (id: string | null) => void;
+   updatedData: (taskId: string, updatedTask: TimelineTask) => void;
 }
 
-const TaskBar = ({ task, minDate, setTaskIdDetail }: TaskBarProps) => {
+const TaskBar = ({
+   task,
+   minDate,
+   setTaskIdDetail,
+   updatedData,
+}: TaskBarProps) => {
    const { pixelPerDay } = useTimelineZoom();
    const taskRef = useRef<HTMLDivElement | null>(null);
    const refLeftHandle = useRef<HTMLDivElement | null>(null);
@@ -44,80 +50,140 @@ const TaskBar = ({ task, minDate, setTaskIdDetail }: TaskBarProps) => {
       setTaskIdDetail(null);
    };
 
-   useEffect(() => {
-      const taskElement = taskRef.current;
-      const leftHandle = refLeftHandle.current;
-      const rightHandle = refRightHandle.current;
+   useEffect(
+      () => {
+         const taskElement = taskRef.current;
+         const leftHandle = refLeftHandle.current;
+         const rightHandle = refRightHandle.current;
 
-      if (!taskElement || !leftHandle || !rightHandle) return;
+         if (!taskElement || !leftHandle || !rightHandle) return;
 
-      const dragState = {
-         startWidth: 0,
-         startLeft: 0,
-         startX: 0,
-         activeHandle: null as 'left' | 'right' | null,
-      };
+         const dragState = {
+            startWidth: 0,
+            startLeft: 0,
+            startX: 0,
+            activeHandle: null as 'left' | 'right' | null,
+         };
 
-      const onMouseMove = (e: MouseEvent) => {
-         const deltaX = e.clientX - dragState.startX;
+         const onMouseMove = (e: MouseEvent) => {
+            const deltaX = e.clientX - dragState.startX;
 
-         if (dragState.activeHandle === 'left') {
-            const newWidth = dragState.startWidth - deltaX;
-            const newLeft = dragState.startLeft + deltaX;
+            if (dragState.activeHandle === 'left') {
+               const newWidth = dragState.startWidth - deltaX;
+               const newLeft = dragState.startLeft + deltaX;
 
-            taskElement.style.width = `${newWidth}px`;
-            taskElement.style.left = `${newLeft}px`;
-         } else if (dragState.activeHandle === 'right') {
-            const newWidth = dragState.startWidth + deltaX;
-            taskElement.style.width = `${newWidth}px`;
-         }
-      };
+               // Optional: Add a check for minimum width (e.g., 1 day)
+               // if (newWidth >= pixelPerDay) {
+               taskElement.style.width = `${newWidth}px`;
+               taskElement.style.left = `${newLeft}px`;
+               // }
+            } else if (dragState.activeHandle === 'right') {
+               const newWidth = dragState.startWidth + deltaX;
+               // Optional: Add a check for minimum width
+               // if (newWidth >= pixelPerDay) {
+               taskElement.style.width = `${newWidth}px`;
+               // }
+            }
+         };
 
-      const onMouseUp = () => {
-         dragState.activeHandle = null;
-         window.removeEventListener('mousemove', onMouseMove);
-         window.removeEventListener('mouseup', onMouseUp);
-      };
+         // --- MODIFIED onMouseUp ---
+         const onMouseUp = () => {
+            // Only run if a drag was active
+            if (!dragState.activeHandle) return;
 
-      const onMouseDownLeft = (e: MouseEvent) => {
-         e.preventDefault();
-         e.stopPropagation();
+            const msPerDay = 1000 * 60 * 60 * 24;
+            const finalStyles = getComputedStyle(taskElement);
 
-         const styles = getComputedStyle(taskElement);
-         dragState.startWidth = parseFloat(styles.width);
-         dragState.startLeft = parseFloat(styles.left);
-         dragState.startX = e.clientX;
-         dragState.activeHandle = 'left';
+            if (dragState.activeHandle === 'left') {
+               // --- Left Handle Logic: Calculate new Start Date ---
+               const finalLeft = parseFloat(finalStyles.left);
+               const deltaPixels = finalLeft - dragState.startLeft;
+               const deltaDays = Math.round(deltaPixels / pixelPerDay);
 
-         window.addEventListener('mousemove', onMouseMove);
-         window.addEventListener('mouseup', onMouseUp);
-      };
+               // Calculate new start time from the original start date
+               const newStartTime =
+                  task.startDate.getTime() + deltaDays * msPerDay;
+               const newStartDate = new Date(newStartTime);
 
-      const onMouseDownRight = (e: MouseEvent) => {
-         e.preventDefault();
-         e.stopPropagation();
+               console.log(
+                  'Resized from left. New Start Date:',
+                  newStartDate.toLocaleDateString()
+               );
+               updatedData(task.id, { ...task, startDate: newStartDate });
+            } else if (dragState.activeHandle === 'right') {
+               // --- Right Handle Logic: Calculate new End Date ---
+               const finalWidth = parseFloat(finalStyles.width);
+               const deltaPixels = finalWidth - dragState.startWidth;
+               const deltaDays = Math.round(deltaPixels / pixelPerDay);
 
-         const styles = getComputedStyle(taskElement);
-         dragState.startWidth = parseFloat(styles.width);
-         dragState.startLeft = parseFloat(styles.left);
-         dragState.startX = e.clientX;
-         dragState.activeHandle = 'right';
+               // Calculate new end time from the original end date
+               const newEndTime = task.endDate.getTime() + deltaDays * msPerDay;
+               const newEndDate = new Date(newEndTime);
 
-         window.addEventListener('mousemove', onMouseMove);
-         window.addEventListener('mouseup', onMouseUp);
-      };
+               console.log(
+                  'Resized from right. New End Date:',
+                  newEndDate.toLocaleDateString()
+               );
+               updatedData(task.id, { ...task, endDate: newEndDate });
+            }
 
-      leftHandle.addEventListener('mousedown', onMouseDownLeft);
-      rightHandle.addEventListener('mousedown', onMouseDownRight);
+            // Reset and clean up listeners
+            dragState.activeHandle = null;
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+         };
+         // --- END of MODIFIED onMouseUp ---
 
-      return () => {
-         leftHandle.removeEventListener('mousedown', onMouseDownLeft);
-         rightHandle.removeEventListener('mousedown', onMouseDownRight);
+         const onMouseDownLeft = (e: MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
 
-         window.removeEventListener('mousemove', onMouseMove);
-         window.removeEventListener('mouseup', onMouseUp);
-      };
-   }, [taskRef, refLeftHandle, refRightHandle]);
+            const styles = getComputedStyle(taskElement);
+            dragState.startWidth = parseFloat(styles.width);
+            dragState.startLeft = parseFloat(styles.left);
+            dragState.startX = e.clientX;
+            dragState.activeHandle = 'left';
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+         };
+
+         const onMouseDownRight = (e: MouseEvent) => {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const styles = getComputedStyle(taskElement);
+            dragState.startWidth = parseFloat(styles.width);
+            dragState.startLeft = parseFloat(styles.left);
+            dragState.startX = e.clientX;
+            dragState.activeHandle = 'right';
+
+            window.addEventListener('mousemove', onMouseMove);
+            window.addEventListener('mouseup', onMouseUp);
+         };
+
+         leftHandle.addEventListener('mousedown', onMouseDownLeft);
+         rightHandle.addEventListener('mousedown', onMouseDownRight);
+
+         return () => {
+            leftHandle.removeEventListener('mousedown', onMouseDownLeft);
+            rightHandle.removeEventListener('mousedown', onMouseDownRight);
+
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+         };
+      },
+      // --- ADDED DEPENDENCIES ---
+      // This ensures onMouseUp has the correct 'task' and 'pixelPerDay' values
+      [
+         taskRef,
+         refLeftHandle,
+         refRightHandle,
+         task.startDate,
+         task.endDate,
+         pixelPerDay,
+      ]
+   );
 
    return (
       <div

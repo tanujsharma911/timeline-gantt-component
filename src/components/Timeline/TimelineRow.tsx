@@ -16,9 +16,15 @@ interface TimelineRowProps {
    };
    minDate?: Date;
    setTaskIdDetail: (id: string | null) => void;
+   updatedData: (taskId: string, updatedTask: TimelineTask) => void;
 }
 
-const TimelineRow = ({ row, minDate, setTaskIdDetail }: TimelineRowProps) => {
+const TimelineRow = ({
+   row,
+   minDate,
+   setTaskIdDetail,
+   updatedData,
+}: TimelineRowProps) => {
    const { onDrop, onDragOver } = useDragAndDrop(undefined, row.id);
    const maxOverlaps = calculateMaxOverlaps(row.tasks);
 
@@ -29,16 +35,21 @@ const TimelineRow = ({ row, minDate, setTaskIdDetail }: TimelineRowProps) => {
 
    return (
       <div
-         className=" h-full w-full border-b border-gray-200 rounded bg-transparent"
+         className=" h-full w-full ring ring-gray-300 bg-transparent"
          onDrop={onDrop}
          onDragOver={onDragOver}
       >
-         <div className="relative h-14">
+         <div className="relative" style={{ height: `${maxOverlaps * 56}px` }}>
             {tasksWithLevels.map((task) => (
-               <TaskBar key={task.id} task={task} minDate={minDate} setTaskIdDetail={setTaskIdDetail} />
+               <TaskBar
+                  key={task.id}
+                  task={task}
+                  minDate={minDate}
+                  setTaskIdDetail={setTaskIdDetail}
+                  updatedData={updatedData}
+               />
             ))}
          </div>
-         <div style={{ height: `${(maxOverlaps - 1) * 56}px` }} />
       </div>
    );
 };

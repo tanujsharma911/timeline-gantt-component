@@ -12,7 +12,6 @@ export const calculatePosition = (
 
 
 // calculate maximum number of days overlaping in row
-// "sweep line" or "event point" algorithm.
 export const calculateMaxOverlaps = (
   tasks: { startDate: Date; endDate: Date }[]
 ): number => {

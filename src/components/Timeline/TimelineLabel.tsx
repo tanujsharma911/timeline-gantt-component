@@ -24,7 +24,7 @@ const TimelineLabel = ({ monthArr, dateArr }: TimelineLabelProps) => {
 
    return (
       <>
-         <div className="overflow-x-auto  border-b border-gray-300 z-10 bg-white relative">
+         <div className="overflow-x-auto  border-b border-l border-gray-300 z-10 bg-white relative">
             <div className="flex w-fit text-xs text-gray-700 select-none">
                {monthArr.map((month, i) => (
                   <div
@@ -43,7 +43,7 @@ const TimelineLabel = ({ monthArr, dateArr }: TimelineLabelProps) => {
          </div>
 
          <div
-            className={`grid w-full grid-flow-col text-xs text-gray-700 select-none relative`}
+            className={`grid w-full grid-flow-col border-l border-gray-300 text-xs text-gray-700 select-none relative`}
             style={{
                gridAutoColumns:
                   pixelPerDay <= 30

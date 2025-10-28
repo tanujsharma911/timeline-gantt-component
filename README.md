@@ -25,21 +25,20 @@ npm install
 npm run storybook
 \`\`\`
 ##  Architecture
-1. sweep line algo
-O(n log n + n . m)
-n is the number of tasks
-m is the maximum number of overlaps <<
+
 ##  Features
 - [x] Timeline grid with time scale
-- [x] Task drag-and-drop
-- [x] Task resizing
-- [x] Dependencies
-- [x] View mode switching
+- [x] satisfying Task drag-and-drop on another row
+- [x] Task resizing by drag
+- [x] Automatic sorting by start date
+- [x] Zoom In & Out
 ##  Storybook Stories
 List your stories here
 ##  Technologies
 - React + TypeScript
 - Tailwind CSS
 - Storybook
+- Lucide Icons
+- Date-fns
 ##  Contact
-[Your email]
+email: hellotanujsharma@gmail.com
