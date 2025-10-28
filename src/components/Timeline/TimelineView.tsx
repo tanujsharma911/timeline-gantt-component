@@ -25,7 +25,7 @@ interface props {
 }
 
 const TimelineView = ({ rows, tasks }: props) => {
-   const { data, setData } = useTimelineDataStore();
+   const { data, setData, updatedData } = useTimelineDataStore();
    const { pixelPerDay, increaseZoom, decreaseZoom } = useTimelineZoom();
    const [taskIdDetail, setTaskIdDetail] = useState<string | null>(null);
    const [taskDetails, setTaskDetails] = useState<TimelineTask | null>(null);
@@ -35,8 +35,6 @@ const TimelineView = ({ rows, tasks }: props) => {
       if (taskIdDetail) {
          const taskDetails = tasks[taskIdDetail];
          setTaskDetails(taskDetails);
-      } else {
-         setTaskDetails(null);
       }
    }, [taskIdDetail]);
 
@@ -80,10 +78,18 @@ const TimelineView = ({ rows, tasks }: props) => {
       console.log('Zoomed Out:', newPixelPerDay);
    };
 
+   const handleSetTaskDetails = (task: TimelineTask) => {
+      setTaskDetails(task);
+      updatedData(task.id, taskDetails || {});
+   };
+
    return (
       <div>
          <div className="relative grid grid-cols-[200px_auto_200px] h-[500px] border border-gray-300 rounded overflow-scroll">
-            <TaskDetailSidebar />
+            <TaskDetailSidebar
+               taskDetails={taskDetails}
+               handleSetTaskDetails={handleSetTaskDetails}
+            />
             <div className="w-full overflow-scroll">
                <div className="flex flex-col gap-2 relative w-fit h-fit rounded bg-white">
                   <div className="overflow-x-auto relative border-b border-gray-300">
@@ -112,9 +118,9 @@ const TimelineView = ({ rows, tasks }: props) => {
                </div>
             </div>
 
-            <div className="absolute bottom-5 right-0">
+            <div className="absolute bottom-5 right-[200px]">
                <button
-                  className={`p-2 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50 ${
+                  className={`p-2 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50 border border-gray-300 ${
                      pixelPerDay <= 10 ? 'cursor-not-allowed' : 'cursor-pointer'
                   }`}
                   onClick={zoomOut}
@@ -123,7 +129,7 @@ const TimelineView = ({ rows, tasks }: props) => {
                   <ZoomOut />
                </button>
                <button
-                  className={`p-2 mx-5 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50 ${
+                  className={`p-2 mx-5 rounded border border-gray-300 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 ${
                      pixelPerDay >= 70 ? 'cursor-not-allowed' : 'cursor-pointer'
                   }`}
                   onClick={zoomIn}
@@ -132,7 +138,10 @@ const TimelineView = ({ rows, tasks }: props) => {
                   <ZoomIn />
                </button>
             </div>
-            <TaskDetailSidebar taskDetails={taskDetails} />
+            <TaskDetailSidebar
+               taskDetails={taskDetails}
+               handleSetTaskDetails={handleSetTaskDetails}
+            />
          </div>
       </div>
    );
