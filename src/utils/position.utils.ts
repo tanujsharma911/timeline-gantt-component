@@ -1,5 +1,4 @@
 // Calculate pixel position from date
-
 export const calculatePosition = (
   date: Date,
   startDate: Date | undefined,
@@ -9,4 +8,41 @@ export const calculatePosition = (
   const msPerDay = 1000 * 60 * 60 * 24;
   const daysSinceStart = (date.getTime() - startDate.getTime()) / msPerDay;
   return Math.round(daysSinceStart * pixelsPerDay);
+};
+
+
+// calculate maximum number of days overlaping in row
+// "sweep line" or "event point" algorithm.
+export const calculateMaxOverlaps = (
+  tasks: { startDate: Date; endDate: Date }[]
+): number => {
+  const events: { date: Date; type: 'start' | 'end' }[] = [];
+
+  // flatten timeline into array of object {date, type: 'start' | 'end'}[]
+  tasks.forEach((task) => {
+    events.push({ date: task.startDate, type: 'start' });
+    events.push({ date: task.endDate, type: 'end' });
+  });
+
+  // Sort events by date, with 'end' events before 'start' events on the same date
+  events.sort((a, b) => {
+    if (a.date.getTime() === b.date.getTime()) {
+      return a.type === 'end' ? -1 : 1;
+    }
+    return a.date.getTime() - b.date.getTime();
+  });
+
+  let currentOverlaps = 0;
+  let maxOverlaps = 0;
+
+  events.forEach((event) => {
+    if (event.type === 'start') {
+      currentOverlaps++;
+      maxOverlaps = Math.max(maxOverlaps, currentOverlaps);
+    } else {
+      currentOverlaps--;
+    }
+  });
+
+  return maxOverlaps;
 };

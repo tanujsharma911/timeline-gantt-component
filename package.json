@@ -14,8 +14,10 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.16",
     "date-fns": "^4.1.0",
+    "prop-types": "^15.8.1",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "zustand": "^5.0.8"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^4.1.1",
@@ -25,6 +27,7 @@
     "@storybook/addon-vitest": "^9.1.15",
     "@storybook/react-vite": "^9.1.15",
     "@types/node": "^24.6.0",
+    "@types/prop-types": "^15.7.15",
     "@types/react": "^19.1.16",
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.4",

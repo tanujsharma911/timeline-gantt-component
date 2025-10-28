@@ -25,7 +25,10 @@ npm install
 npm run storybook
 \`\`\`
 ##  Architecture
-[Brief explanation]
+1. sweep line algo
+O(n log n + n . m)
+n is the number of tasks
+m is the maximum number of overlaps <<
 ##  Features
 - [x] Timeline grid with time scale
 - [x] Task drag-and-drop
