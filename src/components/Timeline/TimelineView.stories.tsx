@@ -11,7 +11,7 @@ export default {
    component: TimelineView,
 };
 
-export const Default = () => (
+export const Overview = () => (
    <TimelineView rows={sampleRows} tasks={sampleTasks} />
 );
 export const Empty = () => <TimelineView rows={[]} tasks={{}} />;
@@ -19,5 +19,3 @@ export const Empty = () => <TimelineView rows={[]} tasks={{}} />;
 export const BigDataSets = () => (
    <TimelineView rows={sampleBigRows} tasks={sampleBigTasks} />
 );
-
-console.log(sampleBigTasks);

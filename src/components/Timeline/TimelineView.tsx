@@ -1,9 +1,9 @@
 import PropTypes from 'prop-types';
+import { ZoomIn, ZoomOut } from 'lucide-react';
 
 import TimelineRow from './TimelineRow';
 import TaskDetailSidebar from './TaskDetailSidebar';
 import TimelineLabel from './TimelineLabel';
-// import DependencyLine from './DependencyLine';
 
 import { useTimelineDataStore } from '../../store/useTimelineDataStore';
 
@@ -15,8 +15,9 @@ import {
    generateMonthScale,
 } from '../../utils/date.utils';
 
-import { pixelPerDay } from '../../constants/timeline.constants';
-import { useEffect } from 'react';
+// import { pixelPerDay } from '../../constants/timeline.constants';
+import { useTimelineZoom } from '../../store/useTimelineZoom';
+import { useEffect, useState } from 'react';
 
 interface props {
    rows: TimelineRowType[];
@@ -25,6 +26,19 @@ interface props {
 
 const TimelineView = ({ rows, tasks }: props) => {
    const { data, setData } = useTimelineDataStore();
+   const { pixelPerDay, increaseZoom, decreaseZoom } = useTimelineZoom();
+   const [taskIdDetail, setTaskIdDetail] = useState<string | null>(null);
+   const [taskDetails, setTaskDetails] = useState<TimelineTask | null>(null);
+
+   useEffect(() => {
+      // find task details
+      if (taskIdDetail) {
+         const taskDetails = tasks[taskIdDetail];
+         setTaskDetails(taskDetails);
+      } else {
+         setTaskDetails(null);
+      }
+   }, [taskIdDetail]);
 
    // Rearranging tasks into their respective rows
    const temp = attachTasksToRows(rows, tasks);
@@ -32,10 +46,6 @@ const TimelineView = ({ rows, tasks }: props) => {
    useEffect(() => {
       setData(temp);
    }, []);
-
-   if (!rows.length && !Object.keys(tasks).length) {
-      return <div>no tasks</div>;
-   }
 
    // Determine timeline date range
    const { minDate, maxDate } = getTimelineDateRange(tasks);
@@ -56,34 +66,73 @@ const TimelineView = ({ rows, tasks }: props) => {
    // Create list of months
    const monthArr = generateMonthScale(minDate, maxDate);
 
+   const zoomIn = () => {
+      if (pixelPerDay >= 70) return;
+      increaseZoom();
+      const newPixelPerDay = pixelPerDay;
+      console.log('Zoomed In:', newPixelPerDay);
+   };
+
+   const zoomOut = () => {
+      if (pixelPerDay <= 10) return;
+      decreaseZoom();
+      const newPixelPerDay = pixelPerDay;
+      console.log('Zoomed Out:', newPixelPerDay);
+   };
+
    return (
-      <div className="flex h-[500px] border border-gray-300 rounded overflow-hidden">
-         <TaskDetailSidebar />
-
-         <div className="w-full overflow-scroll">
-            <div className="flex flex-col gap-2 w-fit rounded bg-white">
-               <div className="overflow-x-auto relative border-b border-gray-300">
-                  {/* Current day red line */}
-                  <div
-                     className="h-full w-[2px] bottom-0 bg-rose-200 z-0 absolute"
-                     style={{
-                        left: `${
-                           daysFromStartToToday * pixelPerDay + pixelPerDay / 2
-                        }px`,
-                     }}
-                  />
-
-                  {/* Timeline labels */}
-                  <TimelineLabel monthArr={monthArr} dateArr={arr} />
-
-                  {/* Timeline rows with tasks */}
-                  {data.map((row) => (
-                     <TimelineRow key={row.id} row={row} minDate={minDate} />
-                  ))}
-
-                  {/* <DependencyLine x1={100} y1={50} x2={100} y2={300} /> */}
+      <div>
+         <div className="relative grid grid-cols-[200px_auto_200px] h-[500px] border border-gray-300 rounded overflow-scroll">
+            <TaskDetailSidebar />
+            <div className="w-full overflow-scroll">
+               <div className="flex flex-col gap-2 relative w-fit h-fit rounded bg-white">
+                  <div className="overflow-x-auto relative border-b border-gray-300">
+                     {/* Current day red line */}
+                     <div
+                        className="h-full w-[2px] bottom-0 bg-rose-200 z-0 absolute"
+                        style={{
+                           left: `${
+                              daysFromStartToToday * pixelPerDay +
+                              pixelPerDay / 2
+                           }px`,
+                        }}
+                     />
+                     {/* Timeline labels */}
+                     <TimelineLabel monthArr={monthArr} dateArr={arr} />
+                     {/* Timeline rows with tasks */}
+                     {data.map((row) => (
+                        <TimelineRow
+                           key={row.id}
+                           row={row}
+                           minDate={minDate}
+                           setTaskIdDetail={setTaskIdDetail}
+                        />
+                     ))}
+                  </div>
                </div>
             </div>
+
+            <div className="absolute bottom-5 right-0">
+               <button
+                  className={`p-2 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50 ${
+                     pixelPerDay <= 10 ? 'cursor-not-allowed' : 'cursor-pointer'
+                  }`}
+                  onClick={zoomOut}
+                  disabled={pixelPerDay <= 10}
+               >
+                  <ZoomOut />
+               </button>
+               <button
+                  className={`p-2 mx-5 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50 ${
+                     pixelPerDay >= 70 ? 'cursor-not-allowed' : 'cursor-pointer'
+                  }`}
+                  onClick={zoomIn}
+                  disabled={pixelPerDay >= 70}
+               >
+                  <ZoomIn />
+               </button>
+            </div>
+            <TaskDetailSidebar taskDetails={taskDetails} />
          </div>
       </div>
    );

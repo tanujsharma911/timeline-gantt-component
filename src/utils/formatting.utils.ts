@@ -7,24 +7,13 @@ export function attachTasksToRows(
    rows: TimelineRowType[],
    tasks: Record<string, TimelineTask>
 ) {
-   console.log(
-      'rows',
-      rows,
-      'tasks',
-      tasks,
-      'Task size:',
-      Object.keys(tasks).length
-   );
    const ans = rows.map((row) => ({
       ...row,
       tasks: row.tasks.map((taskId: string) => tasks[taskId]).filter(Boolean),
    }));
 
-   console.log('Formatted Data:', ans);
-
    return ans;
 }
-
 
 export const calculateTaskLevels = (tasks: TimelineTask[]) => {
    if (!tasks || tasks.length === 0) {

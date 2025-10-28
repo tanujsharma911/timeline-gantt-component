@@ -3,7 +3,8 @@ import type { TimelineTask } from './TimelineView.types';
 import { calculatePosition } from '../../utils/position.utils';
 import { useDragAndDrop } from '../../hooks/useDragAndDrop';
 
-import { pixelPerDay } from '../../constants/timeline.constants';
+// import { pixelPerDay } from '../../constants/timeline.constants';
+import { useTimelineZoom } from '../../store/useTimelineZoom';
 
 type TaskWithLevel = TimelineTask & {
    level: number;
@@ -12,9 +13,12 @@ type TaskWithLevel = TimelineTask & {
 interface TaskBarProps {
    task: TaskWithLevel;
    minDate?: Date;
+   setTaskIdDetail: (id: string | null) => void;
 }
 
-const TaskBar = ({ task, minDate }: TaskBarProps) => {
+const TaskBar = ({ task, minDate, setTaskIdDetail }: TaskBarProps) => {
+   const { pixelPerDay } = useTimelineZoom();
+
    // Calculate duration of task in days
    const msPerDay = 1000 * 60 * 60 * 24;
    const workOfDays =
@@ -25,9 +29,22 @@ const TaskBar = ({ task, minDate }: TaskBarProps) => {
 
    const { onDragStart, onDragOver } = useDragAndDrop(task.id);
 
+   const handleOnFocus = () => {
+      console.log('Div is now focused!');
+      setTaskIdDetail(task.id);
+   };
+
+   const handleOffFocus = () => {
+      console.log('Div lost focus (blurred).');
+      setTaskIdDetail(null);
+   };
+
    return (
       <div
-         className="absolute rounded shadow-sm cursor-move hover:shadow-lg transition-shadow"
+         tabIndex={0}
+         onFocus={handleOnFocus}
+         onBlur={handleOffFocus}
+         className="absolute rounded shadow-sm cursor-move hover:shadow-lg transition-shadow tabIndex-0 focus:outline-2 focus:outline-blue-500"
          style={{
             left: `${offset}px`,
             width: `${workOfDays * pixelPerDay}px`,

@@ -48,7 +48,7 @@ export const sampleTasks: Record<string, TimelineTask> = {
       id: 'task-1',
       title: 'UI Component Development',
       startDate: new Date(2025, 9, 1),
-      endDate: new Date(2025, 9, 15),
+      endDate: new Date(2025, 9, 31),
       progress: 60,
       assignee: 'Frontend Team',
       rowId: 'row-1',

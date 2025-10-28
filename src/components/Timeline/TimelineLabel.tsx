@@ -1,7 +1,8 @@
 import { format, isToday } from 'date-fns';
 import { useEffect, useRef } from 'react';
 
-import { pixelPerDay } from '../../constants/timeline.constants';
+// import { pixelPerDay } from '../../constants/timeline.constants';
+import { useTimelineZoom } from '../../store/useTimelineZoom';
 
 interface TimelineLabelProps {
    monthArr: { month: string; days: number }[];
@@ -9,6 +10,7 @@ interface TimelineLabelProps {
 }
 
 const TimelineLabel = ({ monthArr, dateArr }: TimelineLabelProps) => {
+   const { pixelPerDay } = useTimelineZoom();
    const targetRef = useRef<HTMLDivElement | null>(null);
 
    useEffect(() => {
@@ -22,7 +24,7 @@ const TimelineLabel = ({ monthArr, dateArr }: TimelineLabelProps) => {
 
    return (
       <>
-         <div className="overflow-x-auto border-b border-gray-300 z-10 bg-white relative">
+         <div className="overflow-x-auto  border-b border-gray-300 z-10 bg-white relative">
             <div className="flex w-fit text-xs text-gray-700 select-none">
                {monthArr.map((month, i) => (
                   <div
@@ -42,12 +44,21 @@ const TimelineLabel = ({ monthArr, dateArr }: TimelineLabelProps) => {
 
          <div
             className={`grid w-full grid-flow-col text-xs text-gray-700 select-none relative`}
-            style={{ gridAutoColumns: `${pixelPerDay}px` }}
+            style={{
+               gridAutoColumns:
+                  pixelPerDay <= 30
+                     ? `${pixelPerDay * 2}px`
+                     : `${pixelPerDay}px`,
+            }}
          >
-            {dateArr.map((day, i: number) => (
-               <div
-                  key={i}
-                  className={`py-4 
+            {pixelPerDay > 20 &&
+               dateArr.map((day, i: number) => {
+                  if (i % 2 === 0 && pixelPerDay <= 30) return null;
+
+                  return (
+                     <div
+                        key={i}
+                        className={`py-4
                     border-b border-r border-gray-300 
                     transition-colors
                     ${
@@ -55,21 +66,25 @@ const TimelineLabel = ({ monthArr, dateArr }: TimelineLabelProps) => {
                           ? 'bg-rose-500 text-white hover:bg-rose-600'
                           : 'bg-white hover:bg-gray-100'
                     }
+                     
                   `}
-                  ref={isToday(day.date) ? targetRef : null}
-               >
-                  <p className="text-center font-semibold">
-                     {day.date.getDate()}
-                  </p>
-                  <p
-                     className={`text-center ${
-                        isToday(day.date) ? 'text-white/80' : 'text-gray-500'
-                     } `}
-                  >
-                     {format(day.date, 'EEE')}
-                  </p>
-               </div>
-            ))}
+                        ref={isToday(day.date) ? targetRef : null}
+                     >
+                        <p className="text-center font-semibold">
+                           {day.date.getDate()}
+                        </p>
+                        <p
+                           className={`text-center ${
+                              isToday(day.date)
+                                 ? 'text-white/80'
+                                 : 'text-gray-500'
+                           } `}
+                        >
+                           {format(day.date, 'EEE')}
+                        </p>
+                     </div>
+                  );
+               })}
          </div>
       </>
    );
