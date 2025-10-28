@@ -6,6 +6,8 @@ import { useDragAndDrop } from '../../hooks/useDragAndDrop';
 // import { pixelPerDay } from '../../constants/timeline.constants';
 import { useTimelineZoom } from '../../store/useTimelineZoom';
 
+import { useEffect, useRef } from 'react';
+
 type TaskWithLevel = TimelineTask & {
    level: number;
 };
@@ -18,6 +20,9 @@ interface TaskBarProps {
 
 const TaskBar = ({ task, minDate, setTaskIdDetail }: TaskBarProps) => {
    const { pixelPerDay } = useTimelineZoom();
+   const taskRef = useRef<HTMLDivElement | null>(null);
+   const refLeftHandle = useRef<HTMLDivElement | null>(null);
+   const refRightHandle = useRef<HTMLDivElement | null>(null);
 
    // Calculate duration of task in days
    const msPerDay = 1000 * 60 * 60 * 24;
@@ -39,11 +44,87 @@ const TaskBar = ({ task, minDate, setTaskIdDetail }: TaskBarProps) => {
       setTaskIdDetail(null);
    };
 
+   useEffect(() => {
+      const taskElement = taskRef.current;
+      const leftHandle = refLeftHandle.current;
+      const rightHandle = refRightHandle.current;
+
+      if (!taskElement || !leftHandle || !rightHandle) return;
+
+      const dragState = {
+         startWidth: 0,
+         startLeft: 0,
+         startX: 0,
+         activeHandle: null as 'left' | 'right' | null,
+      };
+
+      const onMouseMove = (e: MouseEvent) => {
+         const deltaX = e.clientX - dragState.startX;
+
+         if (dragState.activeHandle === 'left') {
+            const newWidth = dragState.startWidth - deltaX;
+            const newLeft = dragState.startLeft + deltaX;
+
+            taskElement.style.width = `${newWidth}px`;
+            taskElement.style.left = `${newLeft}px`;
+         } else if (dragState.activeHandle === 'right') {
+            const newWidth = dragState.startWidth + deltaX;
+            taskElement.style.width = `${newWidth}px`;
+         }
+      };
+
+      const onMouseUp = () => {
+         dragState.activeHandle = null;
+         window.removeEventListener('mousemove', onMouseMove);
+         window.removeEventListener('mouseup', onMouseUp);
+      };
+
+      const onMouseDownLeft = (e: MouseEvent) => {
+         e.preventDefault();
+         e.stopPropagation();
+
+         const styles = getComputedStyle(taskElement);
+         dragState.startWidth = parseFloat(styles.width);
+         dragState.startLeft = parseFloat(styles.left);
+         dragState.startX = e.clientX;
+         dragState.activeHandle = 'left';
+
+         window.addEventListener('mousemove', onMouseMove);
+         window.addEventListener('mouseup', onMouseUp);
+      };
+
+      const onMouseDownRight = (e: MouseEvent) => {
+         e.preventDefault();
+         e.stopPropagation();
+
+         const styles = getComputedStyle(taskElement);
+         dragState.startWidth = parseFloat(styles.width);
+         dragState.startLeft = parseFloat(styles.left);
+         dragState.startX = e.clientX;
+         dragState.activeHandle = 'right';
+
+         window.addEventListener('mousemove', onMouseMove);
+         window.addEventListener('mouseup', onMouseUp);
+      };
+
+      leftHandle.addEventListener('mousedown', onMouseDownLeft);
+      rightHandle.addEventListener('mousedown', onMouseDownRight);
+
+      return () => {
+         leftHandle.removeEventListener('mousedown', onMouseDownLeft);
+         rightHandle.removeEventListener('mousedown', onMouseDownRight);
+
+         window.removeEventListener('mousemove', onMouseMove);
+         window.removeEventListener('mouseup', onMouseUp);
+      };
+   }, [taskRef, refLeftHandle, refRightHandle]);
+
    return (
       <div
          tabIndex={0}
          onFocus={handleOnFocus}
          onBlur={handleOffFocus}
+         ref={taskRef}
          className="absolute rounded shadow-sm cursor-move hover:shadow-lg transition-shadow tabIndex-0 focus:outline-2 focus:outline-blue-500"
          style={{
             left: `${offset}px`,
@@ -81,10 +162,12 @@ const TaskBar = ({ task, minDate, setTaskIdDetail }: TaskBarProps) => {
             <div
                className="absolute left-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-white
   opacity-0 hover:opacity-50"
+               ref={refLeftHandle}
             />
             <div
                className="absolute right-0 top-0 bottom-0 w-1 cursor-ew-resize hover:bg-white
   opacity-0 hover:opacity-50"
+               ref={refRightHandle}
             />
          </div>
       </div>

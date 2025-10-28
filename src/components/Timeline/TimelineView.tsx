@@ -148,7 +148,7 @@ const TimelineView = ({ rows, tasks }: props) => {
 };
 
 TimelineView.propTypes = {
-   sampleRows: PropTypes.arrayOf(
+   rows: PropTypes.arrayOf(
       PropTypes.shape({
          id: PropTypes.string.isRequired,
          label: PropTypes.string.isRequired,
@@ -157,7 +157,7 @@ TimelineView.propTypes = {
       })
    ).isRequired,
 
-   sampleTasks: PropTypes.objectOf(
+   tasks: PropTypes.objectOf(
       PropTypes.shape({
          id: PropTypes.string.isRequired,
          title: PropTypes.string.isRequired,
