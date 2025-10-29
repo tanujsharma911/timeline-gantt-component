@@ -1,20 +1,27 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { CircleX } from 'lucide-react';
 import type { TimelineTask } from './TimelineView.types';
 
 import Button from '../primitives/Button';
 
+interface TaskDetailSidebarProps {
+   taskDetails: TimelineTask | null;
+   handleSetTaskDetails?: (task: TimelineTask) => void;
+   setTaskIdDetail: (id: string | null) => void;
+   isOpen: boolean;
+}
+
 const TaskDetailSidebar = ({
    taskDetails,
    handleSetTaskDetails,
-}: {
-   taskDetails: TimelineTask | null;
-   handleSetTaskDetails?: (task: TimelineTask) => void;
-}) => {
+   setTaskIdDetail,
+   isOpen,
+}: TaskDetailSidebarProps) => {
    const [taskTitle, setTaskTitle] = useState<string | null>(null);
    const [taskProgress, setTaskProgress] = useState<number | null>(null);
+   const closeBtnRef = useRef<HTMLButtonElement | null>(null);
 
    useEffect(() => {
-      console.log('Task details updated 2:', taskDetails);
       if (taskDetails) {
          setTaskTitle(taskDetails.title);
          setTaskProgress(taskDetails.progress);
@@ -23,19 +30,42 @@ const TaskDetailSidebar = ({
 
    const handleEdit = () => {
       if (taskDetails && handleSetTaskDetails) {
-         // Here you can handle the edit action, e.g., save the new title
-         console.log('Editing task:', taskDetails.id, 'New title:', taskTitle);
-
-         // For now, just updating the title locally
          taskDetails.title = taskTitle || taskDetails.title;
          taskDetails.progress = taskProgress || taskDetails.progress;
          handleSetTaskDetails({ ...taskDetails });
+         setTaskIdDetail(null);
       }
    };
 
+   useEffect(() => {
+      const timer = setTimeout(() => {
+         closeBtnRef.current?.focus();
+      }, 100);
+
+      return () => clearTimeout(timer);
+   }, [isOpen, setTaskIdDetail]);
+
    return (
-      <div className=" border border-gray-200 p-4">
-         <h3 className="font-bold text-lg text-gray-500">Task Details</h3>
+      <div
+         role="dialog"
+         aria-labelledby="title"
+         className=" border border-gray-200 p-4"
+      >
+         <div className="flex justify-between items-center mb-4 relative">
+            <h3 id="title" className="font-bold text-lg text-gray-500">
+               Task Details
+            </h3>
+            <div>
+               <button
+                  className="p-2 hover:bg-gray-200 rounded focus:ring-2 focus:ring-blue-500"
+                  onClick={() => setTaskIdDetail(null)}
+                  aria-label="Close Task Details Sidebar"
+                  ref={closeBtnRef}
+               >
+                  <CircleX color="gray" />
+               </button>
+            </div>
+         </div>
          {taskDetails ? (
             <div>
                <label htmlFor="task-title">Edit Task Title</label>

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 
 interface TimelineZoomState {
    pixelPerDay: number;
-   setData: (data: number) => void;
+   setPixelPerDay: (data: number) => void;
    increaseZoom: () => void;
    decreaseZoom: () => void;
 }
@@ -10,7 +10,7 @@ interface TimelineZoomState {
 export const useTimelineZoom = create<TimelineZoomState>((set) => ({
    pixelPerDay: 40,
 
-   setData: (data) => set({ pixelPerDay: data }),
+   setPixelPerDay: (data) => set({ pixelPerDay: data }),
 
    increaseZoom: () =>
       set((state) => ({

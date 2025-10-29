@@ -17,7 +17,7 @@ const RowDetailsSideBar = ({
    data: RowDetailsSideBarProps['rows'];
 }) => {
    return (
-      <div className="w-[200px] mt-[106px] sticky left-0 z-10 bg-white">
+      <div className={` mt-[106px] sticky left-0 z-10 bg-white w-[200px]`}>
          {data.map((row) => {
             const maxOverlaps = calculateMaxOverlaps(row.tasks);
             return (

@@ -24,6 +24,7 @@ const TimelineLabel = ({ monthArr, dateArr }: TimelineLabelProps) => {
 
    return (
       <>
+         {/* Month Labels */}
          <div className="overflow-x-auto  border-b border-l border-gray-300 z-10 bg-white relative">
             <div className="flex w-fit text-xs text-gray-700 select-none">
                {monthArr.map((month, i) => (
@@ -32,7 +33,7 @@ const TimelineLabel = ({ monthArr, dateArr }: TimelineLabelProps) => {
                      className="flex items-center justify-center border-r border-gray-300 bg-white hover:bg-gray-50 transition-colors"
                      style={{
                         width: `${month.days * pixelPerDay}px`,
-                        height: '40px',
+                        height: pixelPerDay <= 20 ? '105px' : '40px',
                         minWidth: '60px', // keeps smaller months visible
                      }}
                   >
@@ -42,6 +43,7 @@ const TimelineLabel = ({ monthArr, dateArr }: TimelineLabelProps) => {
             </div>
          </div>
 
+         {/* Date Labels */}
          <div
             className={`grid w-full grid-flow-col border-l border-gray-300 text-xs text-gray-700 select-none relative`}
             style={{

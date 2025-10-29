@@ -40,156 +40,144 @@ const TaskBar = ({
 
    const { onDragStart, onDragOver } = useDragAndDrop(task.id);
 
-   const handleOnFocus = () => {
-      console.log('Div is now focused!');
+   // Handle focus to show task details
+   const handleOnClick = () => {
       setTaskIdDetail(task.id);
    };
-
-   const handleOffFocus = () => {
-      console.log('Div lost focus (blurred).');
-      setTaskIdDetail(null);
+   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+      if (event.key === 'Enter') {
+         handleOnClick();
+      }
    };
 
-   useEffect(
-      () => {
-         const taskElement = taskRef.current;
-         const leftHandle = refLeftHandle.current;
-         const rightHandle = refRightHandle.current;
+   //  Edit task resizing logic
+   useEffect(() => {
+      const taskElement = taskRef.current;
+      const leftHandle = refLeftHandle.current;
+      const rightHandle = refRightHandle.current;
 
-         if (!taskElement || !leftHandle || !rightHandle) return;
+      if (!taskElement || !leftHandle || !rightHandle) return;
 
-         const dragState = {
-            startWidth: 0,
-            startLeft: 0,
-            startX: 0,
-            activeHandle: null as 'left' | 'right' | null,
-         };
+      const dragState = {
+         startWidth: 0,
+         startLeft: 0,
+         startX: 0,
+         activeHandle: null as 'left' | 'right' | null,
+      };
 
-         const onMouseMove = (e: MouseEvent) => {
-            const deltaX = e.clientX - dragState.startX;
+      const onMouseMove = (e: MouseEvent) => {
+         const deltaX = e.clientX - dragState.startX;
 
-            if (dragState.activeHandle === 'left') {
-               const newWidth = dragState.startWidth - deltaX;
-               const newLeft = dragState.startLeft + deltaX;
+         if (dragState.activeHandle === 'left') {
+            const newWidth = dragState.startWidth - deltaX;
+            const newLeft = dragState.startLeft + deltaX;
 
-               // Optional: Add a check for minimum width (e.g., 1 day)
-               // if (newWidth >= pixelPerDay) {
-               taskElement.style.width = `${newWidth}px`;
-               taskElement.style.left = `${newLeft}px`;
-               // }
-            } else if (dragState.activeHandle === 'right') {
-               const newWidth = dragState.startWidth + deltaX;
-               // Optional: Add a check for minimum width
-               // if (newWidth >= pixelPerDay) {
-               taskElement.style.width = `${newWidth}px`;
-               // }
-            }
-         };
+            // Optional: Add a check for minimum width (e.g., 1 day)
+            // if (newWidth >= pixelPerDay) {
+            taskElement.style.width = `${newWidth}px`;
+            taskElement.style.left = `${newLeft}px`;
+            // }
+         } else if (dragState.activeHandle === 'right') {
+            const newWidth = dragState.startWidth + deltaX;
+            // Optional: Add a check for minimum width
+            // if (newWidth >= pixelPerDay) {
+            taskElement.style.width = `${newWidth}px`;
+            // }
+         }
+      };
 
-         // --- MODIFIED onMouseUp ---
-         const onMouseUp = () => {
-            // Only run if a drag was active
-            if (!dragState.activeHandle) return;
+      // --- MODIFIED onMouseUp ---
+      const onMouseUp = () => {
+         // Only run if a drag was active
+         if (!dragState.activeHandle) return;
 
-            const msPerDay = 1000 * 60 * 60 * 24;
-            const finalStyles = getComputedStyle(taskElement);
+         const msPerDay = 1000 * 60 * 60 * 24;
+         const finalStyles = getComputedStyle(taskElement);
 
-            if (dragState.activeHandle === 'left') {
-               // --- Left Handle Logic: Calculate new Start Date ---
-               const finalLeft = parseFloat(finalStyles.left);
-               const deltaPixels = finalLeft - dragState.startLeft;
-               const deltaDays = Math.round(deltaPixels / pixelPerDay);
+         if (dragState.activeHandle === 'left') {
+            // Left Handle Logic: Calculate new Start Date
+            const finalLeft = parseFloat(finalStyles.left);
+            const deltaPixels = finalLeft - dragState.startLeft;
+            const deltaDays = Math.round(deltaPixels / pixelPerDay);
 
-               // Calculate new start time from the original start date
-               const newStartTime =
-                  task.startDate.getTime() + deltaDays * msPerDay;
-               const newStartDate = new Date(newStartTime);
+            // Calculate new start time from the original start date
+            const newStartTime =
+               task.startDate.getTime() + deltaDays * msPerDay;
+            const newStartDate = new Date(newStartTime);
 
-               console.log(
-                  'Resized from left. New Start Date:',
-                  newStartDate.toLocaleDateString()
-               );
-               updatedData(task.id, { ...task, startDate: newStartDate });
-            } else if (dragState.activeHandle === 'right') {
-               // --- Right Handle Logic: Calculate new End Date ---
-               const finalWidth = parseFloat(finalStyles.width);
-               const deltaPixels = finalWidth - dragState.startWidth;
-               const deltaDays = Math.round(deltaPixels / pixelPerDay);
+            updatedData(task.id, { ...task, startDate: newStartDate });
+         } else if (dragState.activeHandle === 'right') {
+            // Right Handle Logic: Calculate new End Date
+            const finalWidth = parseFloat(finalStyles.width);
+            const deltaPixels = finalWidth - dragState.startWidth;
+            const deltaDays = Math.round(deltaPixels / pixelPerDay);
 
-               // Calculate new end time from the original end date
-               const newEndTime = task.endDate.getTime() + deltaDays * msPerDay;
-               const newEndDate = new Date(newEndTime);
+            // Calculate new end time from the original end date
+            const newEndTime = task.endDate.getTime() + deltaDays * msPerDay;
+            const newEndDate = new Date(newEndTime);
 
-               console.log(
-                  'Resized from right. New End Date:',
-                  newEndDate.toLocaleDateString()
-               );
-               updatedData(task.id, { ...task, endDate: newEndDate });
-            }
+            updatedData(task.id, { ...task, endDate: newEndDate });
+         }
 
-            // Reset and clean up listeners
-            dragState.activeHandle = null;
-            window.removeEventListener('mousemove', onMouseMove);
-            window.removeEventListener('mouseup', onMouseUp);
-         };
-         // --- END of MODIFIED onMouseUp ---
+         // Reset and clean up listeners
+         dragState.activeHandle = null;
+         window.removeEventListener('mousemove', onMouseMove);
+         window.removeEventListener('mouseup', onMouseUp);
+      };
+      // --- END of MODIFIED onMouseUp ---
 
-         const onMouseDownLeft = (e: MouseEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
+      const onMouseDownLeft = (e: MouseEvent) => {
+         e.preventDefault();
+         e.stopPropagation();
 
-            const styles = getComputedStyle(taskElement);
-            dragState.startWidth = parseFloat(styles.width);
-            dragState.startLeft = parseFloat(styles.left);
-            dragState.startX = e.clientX;
-            dragState.activeHandle = 'left';
+         const styles = getComputedStyle(taskElement);
+         dragState.startWidth = parseFloat(styles.width);
+         dragState.startLeft = parseFloat(styles.left);
+         dragState.startX = e.clientX;
+         dragState.activeHandle = 'left';
 
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mouseup', onMouseUp);
-         };
+         window.addEventListener('mousemove', onMouseMove);
+         window.addEventListener('mouseup', onMouseUp);
+      };
 
-         const onMouseDownRight = (e: MouseEvent) => {
-            e.preventDefault();
-            e.stopPropagation();
+      const onMouseDownRight = (e: MouseEvent) => {
+         e.preventDefault();
+         e.stopPropagation();
 
-            const styles = getComputedStyle(taskElement);
-            dragState.startWidth = parseFloat(styles.width);
-            dragState.startLeft = parseFloat(styles.left);
-            dragState.startX = e.clientX;
-            dragState.activeHandle = 'right';
+         const styles = getComputedStyle(taskElement);
+         dragState.startWidth = parseFloat(styles.width);
+         dragState.startLeft = parseFloat(styles.left);
+         dragState.startX = e.clientX;
+         dragState.activeHandle = 'right';
 
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mouseup', onMouseUp);
-         };
+         window.addEventListener('mousemove', onMouseMove);
+         window.addEventListener('mouseup', onMouseUp);
+      };
 
-         leftHandle.addEventListener('mousedown', onMouseDownLeft);
-         rightHandle.addEventListener('mousedown', onMouseDownRight);
+      leftHandle.addEventListener('mousedown', onMouseDownLeft);
+      rightHandle.addEventListener('mousedown', onMouseDownRight);
 
-         return () => {
-            leftHandle.removeEventListener('mousedown', onMouseDownLeft);
-            rightHandle.removeEventListener('mousedown', onMouseDownRight);
+      return () => {
+         leftHandle.removeEventListener('mousedown', onMouseDownLeft);
+         rightHandle.removeEventListener('mousedown', onMouseDownRight);
 
-            window.removeEventListener('mousemove', onMouseMove);
-            window.removeEventListener('mouseup', onMouseUp);
-         };
-      },
-      // --- ADDED DEPENDENCIES ---
-      // This ensures onMouseUp has the correct 'task' and 'pixelPerDay' values
-      [
-         taskRef,
-         refLeftHandle,
-         refRightHandle,
-         task.startDate,
-         task.endDate,
-         pixelPerDay,
-      ]
-   );
+         window.removeEventListener('mousemove', onMouseMove);
+         window.removeEventListener('mouseup', onMouseUp);
+      };
+   }, [
+      taskRef,
+      refLeftHandle,
+      refRightHandle,
+      task.startDate,
+      task.endDate,
+      pixelPerDay,
+   ]);
 
    return (
       <div
          tabIndex={0}
-         onFocus={handleOnFocus}
-         onBlur={handleOffFocus}
+         onClick={handleOnClick}
+         onKeyDown={handleKeyDown}
          ref={taskRef}
          className="absolute rounded shadow-sm cursor-move hover:shadow-lg transition-shadow tabIndex-0 focus:outline-2 focus:outline-blue-500"
          style={{

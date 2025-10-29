@@ -1,10 +1,12 @@
 import PropTypes from 'prop-types';
-import { ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronRight } from 'lucide-react';
 
 import TimelineRow from './TimelineRow';
 import TaskDetailSidebar from './TaskDetailSidebar';
 import RowDetailsSideBar from './RowDetailsSideBar';
 import TimelineLabel from './TimelineLabel';
+import Zoom from './Zoom';
+import CurrentVerticalLine from './CurrentTimeLine';
 
 import { useTimelineDataStore } from '../../store/useTimelineDataStore';
 
@@ -23,13 +25,24 @@ import { useEffect, useState } from 'react';
 interface props {
    rows: TimelineRowType[];
    tasks: Record<string, TimelineTask>;
+   zoom?: boolean;
+   sidebarOpenDefault?: boolean;
+   mobileView?: boolean;
 }
 
-const TimelineView = ({ rows, tasks }: props) => {
+const TimelineView = ({
+   rows,
+   tasks,
+   zoom,
+   sidebarOpenDefault = true,
+   mobileView,
+}: props) => {
    const { data, setData, updatedData } = useTimelineDataStore();
-   const { pixelPerDay, increaseZoom, decreaseZoom } = useTimelineZoom();
+   const { pixelPerDay, setPixelPerDay, increaseZoom, decreaseZoom } =
+      useTimelineZoom();
    const [taskIdDetail, setTaskIdDetail] = useState<string | null>(null);
    const [taskDetails, setTaskDetails] = useState<TimelineTask | null>(null);
+   const [sideBarOpen, setSideBarOpen] = useState(sidebarOpenDefault);
 
    // Rearranging tasks into their respective rows
    const temp = attachTasksToRows(rows, tasks);
@@ -43,11 +56,11 @@ const TimelineView = ({ rows, tasks }: props) => {
             );
             if (foundTask) {
                setTaskDetails(foundTask);
-               console.log('Found Task Details:', foundTask);
-
                break;
             }
          }
+      } else {
+         setTaskDetails(null);
       }
 
       // console.log(data);
@@ -96,28 +109,46 @@ const TimelineView = ({ rows, tasks }: props) => {
    };
 
    return (
-      <div>
+      <div className={`${mobileView ? 'w-md' : 'w-full'}`}>
          <div
             className={`relative grid ${
                taskDetails ? 'grid-cols-[auto_300px]' : 'grid-cols-[auto]'
             } h-[500px] border border-gray-300 rounded overflow-scroll`}
          >
             <div className="grid grid-cols-[200px_auto] overflow-scroll">
-               {data && <RowDetailsSideBar data={data} />}
+               {data && sideBarOpen && <RowDetailsSideBar data={data} />}
+               <button
+                  aria-label={!sideBarOpen ? 'Open Rows Details Sidebar' : 'Close Rows Details Sidebar'}
+                  className={`absolute z-11 bottom-8 bg-white rounded-full ring-1 ring-gray-300 p-2 ${
+                     sideBarOpen ? 'left-45' : 'left-2'
+                  }`}
+                  onClick={(e) => {
+                     setSideBarOpen(!sideBarOpen);
+                     e.currentTarget.setAttribute(
+                        'aria-label',
+                        !sideBarOpen
+                           ? 'Open Rows Details Sidebar'
+                           : 'Close Rows Details Sidebar'
+                     );
+                  }}
+               >
+                  <ChevronRight
+                     className={`transition-transform ${
+                        sideBarOpen ? 'rotate-180' : ''
+                     }`}
+                  />
+               </button>
                <div className="flex flex-col gap-2 relative w-fit h-fit rounded bg-white">
                   <div className="overflow-x-auto relative border-b border-gray-300">
                      {/* Current day red line */}
-                     <div
-                        className="h-full w-[2px] bottom-0 bg-rose-200 z-0 absolute"
-                        style={{
-                           left: `${
-                              daysFromStartToToday * pixelPerDay +
-                              pixelPerDay / 2
-                           }px`,
-                        }}
+                     <CurrentVerticalLine
+                        daysFromStartToToday={daysFromStartToToday}
+                        pixelPerDay={pixelPerDay}
                      />
+
                      {/* Timeline labels */}
                      <TimelineLabel monthArr={monthArr} dateArr={arr} />
+
                      {/* Timeline rows with tasks */}
                      {data.map((row) => (
                         <TimelineRow
@@ -139,29 +170,19 @@ const TimelineView = ({ rows, tasks }: props) => {
                <TaskDetailSidebar
                   taskDetails={taskDetails}
                   handleSetTaskDetails={handleSetTaskDetails}
+                  setTaskIdDetail={setTaskIdDetail}
+                  isOpen={!!taskDetails}
                />
             )}
          </div>
-         <div className="">
-            <button
-               className={`p-2 rounded bg-gray-100 hover:bg-gray-200 disabled:opacity-50 border border-gray-300 ${
-                  pixelPerDay <= 10 ? 'cursor-not-allowed' : 'cursor-pointer'
-               }`}
-               onClick={zoomOut}
-               disabled={pixelPerDay <= 10}
-            >
-               <ZoomOut />
-            </button>
-            <button
-               className={`p-2 mx-5 rounded border border-gray-300 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 ${
-                  pixelPerDay >= 70 ? 'cursor-not-allowed' : 'cursor-pointer'
-               }`}
-               onClick={zoomIn}
-               disabled={pixelPerDay >= 70}
-            >
-               <ZoomIn />
-            </button>
-         </div>
+         {zoom && (
+            <Zoom
+               pixelPerDay={pixelPerDay}
+               setPixelPerDay={setPixelPerDay}
+               zoomIn={zoomIn}
+               zoomOut={zoomOut}
+            />
+         )}
       </div>
    );
 };
