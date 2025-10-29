@@ -18,6 +18,7 @@ interface TimelineDataState {
    ) => void;
    moveTask: (taskId: string, newRowId: string) => void;
    updatedData: (taskId: string, task: Partial<TimelineTask>) => void;
+   deleteTask: (taskId: string) => void;
 }
 
 export const useTimelineDataStore = create<TimelineDataState>((set) => ({
@@ -96,6 +97,17 @@ export const useTimelineDataStore = create<TimelineDataState>((set) => ({
          });
 
          // 8. Return the new state
+         return { data: newData };
+      });
+   },
+   deleteTask: (taskId) => {
+      set((state) => {
+         const newData = state.data.map((row) => {
+            return {
+               ...row,
+               tasks: row.tasks.filter((task) => task.id !== taskId),
+            };
+         });
          return { data: newData };
       });
    },

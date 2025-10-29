@@ -72,21 +72,18 @@ const TaskBar = ({
             const newWidth = dragState.startWidth - deltaX;
             const newLeft = dragState.startLeft + deltaX;
 
-            // Optional: Add a check for minimum width (e.g., 1 day)
-            // if (newWidth >= pixelPerDay) {
-            taskElement.style.width = `${newWidth}px`;
-            taskElement.style.left = `${newLeft}px`;
-            // }
+            if (newWidth >= pixelPerDay) {
+               taskElement.style.width = `${newWidth}px`;
+               taskElement.style.left = `${newLeft}px`;
+            }
          } else if (dragState.activeHandle === 'right') {
             const newWidth = dragState.startWidth + deltaX;
-            // Optional: Add a check for minimum width
-            // if (newWidth >= pixelPerDay) {
-            taskElement.style.width = `${newWidth}px`;
-            // }
+            if (newWidth >= pixelPerDay) {
+               taskElement.style.width = `${newWidth}px`;
+            }
          }
       };
 
-      // --- MODIFIED onMouseUp ---
       const onMouseUp = () => {
          // Only run if a drag was active
          if (!dragState.activeHandle) return;
@@ -119,12 +116,11 @@ const TaskBar = ({
             updatedData(task.id, { ...task, endDate: newEndDate });
          }
 
-         // Reset and clean up listeners
          dragState.activeHandle = null;
          window.removeEventListener('mousemove', onMouseMove);
          window.removeEventListener('mouseup', onMouseUp);
+         setTimeout(() => setTaskIdDetail(null), 50);
       };
-      // --- END of MODIFIED onMouseUp ---
 
       const onMouseDownLeft = (e: MouseEvent) => {
          e.preventDefault();
@@ -176,6 +172,8 @@ const TaskBar = ({
    return (
       <div
          tabIndex={0}
+         aria-label={`${task.title}. From ${task.startDate.toDateString()} to
+         ${task.endDate.toDateString()}. Progress: ${task.progress}%.`}
          onClick={handleOnClick}
          onKeyDown={handleKeyDown}
          ref={taskRef}

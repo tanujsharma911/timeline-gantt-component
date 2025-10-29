@@ -1,4 +1,4 @@
-// Calculate pixel position from date
+// Calculate pixel offset position from start date
 export const calculatePosition = (
   date: Date,
   startDate: Date | undefined,
@@ -10,6 +10,16 @@ export const calculatePosition = (
   return Math.round(daysSinceStart * pixelsPerDay);
 };
 
+// Calculate duration in pixels
+export const calculateDuration = (
+   startDate: Date,
+   endDate: Date,
+   pixelPerDay: number
+): number => {
+   const msPerDay = 1000 * 60 * 60 * 24;
+   const workOfDays = (endDate.getTime() - startDate.getTime()) / msPerDay + 1;
+   return workOfDays * pixelPerDay;
+};
 
 // calculate maximum number of days overlaping in row
 export const calculateMaxOverlaps = (

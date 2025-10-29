@@ -1,32 +1,6 @@
 import type { TimelineTask } from '../components/Timeline/TimelineView.types';
-/**
- * Calculate duration in pixels
- */
-export const calculateDuration = (
-   startDate: Date,
-   endDate: Date,
-   pixelsPerDay: number
-): number => {
-   const msPerDay = 1000 * 60 * 60 * 24;
-   const durationDays = (endDate.getTime() - startDate.getTime()) / msPerDay;
-   return Math.round(durationDays * pixelsPerDay);
-};
-/**
- * Calculate date from pixel position
- */
-export const calculateDateFromPosition = (
-   position: number,
-   startDate: Date,
-   pixelsPerDay: number
-): Date => {
-   const days = Math.round(position / pixelsPerDay);
-   const result = new Date(startDate);
-   result.setDate(result.getDate() + days);
-   return result;
-};
-/**
- * Generate time scale labels
- */
+
+// Generate date scale array
 export const generateTimeScale = (
    startDate: Date = new Date(2025, 0, 1),
    endDate: Date = new Date(2025, 0, 31)
@@ -55,6 +29,8 @@ export const generateTimeScale = (
 
    return scale;
 };
+
+// Generate month array
 export const generateMonthScale = (
    startDate: Date,
    endDate: Date
@@ -94,19 +70,6 @@ export const generateMonthScale = (
    }
 
    return scale;
-};
-
-/**
- * Get week number
- */
-export const getWeekNumber = (date: Date): number => {
-   const d = new Date(
-      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate())
-   );
-   const dayNum = d.getUTCDay() || 7;
-   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-   return Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
 };
 
 export const getTimelineDateRange = (

@@ -37,7 +37,7 @@ const TimelineView = ({
    sidebarOpenDefault = true,
    mobileView,
 }: props) => {
-   const { data, setData, updatedData } = useTimelineDataStore();
+   const { data, setData, updatedData, deleteTask } = useTimelineDataStore();
    const { pixelPerDay, setPixelPerDay, increaseZoom, decreaseZoom } =
       useTimelineZoom();
    const [taskIdDetail, setTaskIdDetail] = useState<string | null>(null);
@@ -172,6 +172,7 @@ const TimelineView = ({
                   handleSetTaskDetails={handleSetTaskDetails}
                   setTaskIdDetail={setTaskIdDetail}
                   isOpen={!!taskDetails}
+                  deleteTask={deleteTask}
                />
             )}
          </div>

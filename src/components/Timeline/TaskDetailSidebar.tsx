@@ -9,6 +9,7 @@ interface TaskDetailSidebarProps {
    handleSetTaskDetails?: (task: TimelineTask) => void;
    setTaskIdDetail: (id: string | null) => void;
    isOpen: boolean;
+   deleteTask: (taskId: string) => void;
 }
 
 const TaskDetailSidebar = ({
@@ -16,6 +17,7 @@ const TaskDetailSidebar = ({
    handleSetTaskDetails,
    setTaskIdDetail,
    isOpen,
+   deleteTask,
 }: TaskDetailSidebarProps) => {
    const [taskTitle, setTaskTitle] = useState<string | null>(null);
    const [taskProgress, setTaskProgress] = useState<number | null>(null);
@@ -36,6 +38,12 @@ const TaskDetailSidebar = ({
          setTaskIdDetail(null);
       }
    };
+   const handleDelete = () => {
+      if (taskDetails && deleteTask) {
+         deleteTask(taskDetails.id);
+         setTaskIdDetail(null);
+      }
+   };
 
    useEffect(() => {
       const timer = setTimeout(() => {
@@ -50,6 +58,7 @@ const TaskDetailSidebar = ({
          role="dialog"
          aria-labelledby="title"
          className=" border border-gray-200 p-4"
+         aria-hidden={taskDetails ? 'false' : 'true'}
       >
          <div className="flex justify-between items-center mb-4 relative">
             <h3 id="title" className="font-bold text-lg text-gray-500">
@@ -99,12 +108,17 @@ const TaskDetailSidebar = ({
                   />
                </div>
 
-               {/* <input type="button" value="Edit" onClick={handleEdit} /> */}
                <Button
                   classNames="mt-4"
                   onClick={handleEdit}
                   label="Edit"
                   color="#3b82f6"
+               />
+               <Button
+                  classNames="mt-4 ml-5"
+                  onClick={handleDelete}
+                  label="Delete"
+                  color="#f64b3b"
                />
             </div>
          ) : (
