@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 
 import TaskBar from './TaskBar';
 
-import type { TimelineTask } from './TimelineView.types';
+import type { TimelineTask } from '../../types/timeline.types';
 import { calculateMaxOverlaps } from '../../utils/position.utils';
 import { calculateTaskLevels } from '../../utils/formatting.utils';
 
@@ -16,14 +16,14 @@ interface TimelineRowProps {
    };
    minDate?: Date;
    setTaskIdDetail: (id: string | null) => void;
-   updatedData: (taskId: string, updatedTask: TimelineTask) => void;
+   updatedRowsWithTasks: (taskId: string, updatedTask: TimelineTask) => void;
 }
 
 const TimelineRow = ({
    row,
    minDate,
    setTaskIdDetail,
-   updatedData,
+   updatedRowsWithTasks,
 }: TimelineRowProps) => {
    const { onDrop, onDragOver } = useDragAndDrop(undefined, row.id);
    const maxOverlaps = calculateMaxOverlaps(row.tasks);
@@ -46,7 +46,7 @@ const TimelineRow = ({
                   task={task}
                   minDate={minDate}
                   setTaskIdDetail={setTaskIdDetail}
-                  updatedData={updatedData}
+                  updatedRowsWithTasks={updatedRowsWithTasks}
                />
             ))}
          </div>

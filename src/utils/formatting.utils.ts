@@ -1,8 +1,6 @@
-import type {
-   TimelineRowType,
-   TimelineTask,
-} from '../components/Timeline/TimelineView.types';
+import type { TimelineRowType, TimelineTask } from '../types/timeline.types';
 
+// Attaches all task objects to each row based on task IDs
 export function attachTasksToRows(
    rows: TimelineRowType[],
    tasks: Record<string, TimelineTask>
@@ -15,6 +13,7 @@ export function attachTasksToRows(
    return ans;
 }
 
+// Calculates and assigns levels to tasks to avoid overlaps
 export const calculateTaskLevels = (tasks: TimelineTask[]) => {
    if (!tasks || tasks.length === 0) {
       return [];
@@ -33,16 +32,16 @@ export const calculateTaskLevels = (tasks: TimelineTask[]) => {
 
       for (let i = 0; i < laneEndDates.length; i++) {
          if (task.startDate.getTime() > laneEndDates[i].getTime()) {
-            laneEndDates[i] = task.endDate; 
+            laneEndDates[i] = task.endDate;
             tasksWithLevels.push({ ...task, level: i });
             foundLane = true;
-            break; 
+            break;
          }
       }
 
       if (!foundLane) {
          const newLevel = laneEndDates.length;
-         laneEndDates.push(task.endDate); 
+         laneEndDates.push(task.endDate);
          tasksWithLevels.push({ ...task, level: newLevel });
       }
    }

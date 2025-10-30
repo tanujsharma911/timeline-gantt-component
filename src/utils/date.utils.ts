@@ -1,4 +1,4 @@
-import type { TimelineTask } from '../components/Timeline/TimelineView.types';
+import type { TimelineTask } from '../types/timeline.types';
 
 // Generate date scale array
 export const generateTimeScale = (
@@ -72,6 +72,7 @@ export const generateMonthScale = (
    return scale;
 };
 
+// Takes all tasks and returns the overall min and max date range
 export const getTimelineDateRange = (
    tasks: Record<string, TimelineTask>
 ): { minDate: Date; maxDate: Date } => {

@@ -11,7 +11,7 @@ import CurrentVerticalLine from './CurrentTimeLine';
 import { useTimelineDataStore } from '../../store/useTimelineDataStore';
 
 import { attachTasksToRows } from '../../utils/formatting.utils';
-import type { TimelineTask, TimelineRowType } from './TimelineView.types';
+import type { TimelineTask, TimelineRowType } from '../../types/timeline.types';
 import {
    getTimelineDateRange,
    generateTimeScale,
@@ -37,7 +37,8 @@ const TimelineView = ({
    sidebarOpenDefault = true,
    mobileView,
 }: props) => {
-   const { data, setData, updatedData, deleteTask } = useTimelineDataStore();
+   const { rowsWithTasks, setRowsWithTasks, updatedRowsWithTasks, deleteTask } =
+      useTimelineDataStore();
    const { pixelPerDay, setPixelPerDay, increaseZoom, decreaseZoom } =
       useTimelineZoom();
    const [taskIdDetail, setTaskIdDetail] = useState<string | null>(null);
@@ -50,7 +51,7 @@ const TimelineView = ({
    useEffect(() => {
       // find task details
       if (taskIdDetail) {
-         for (const row of data) {
+         for (const row of rowsWithTasks) {
             const foundTask = row.tasks.find(
                (task) => task.id === taskIdDetail
             );
@@ -63,11 +64,10 @@ const TimelineView = ({
          setTaskDetails(null);
       }
 
-      // console.log(data);
    }, [taskIdDetail]);
 
    useEffect(() => {
-      setData(temp);
+      setRowsWithTasks(temp);
    }, []);
 
    // Determine timeline date range
@@ -99,13 +99,11 @@ const TimelineView = ({
    const zoomOut = () => {
       if (pixelPerDay <= 10) return;
       decreaseZoom();
-      const newPixelPerDay = pixelPerDay;
-      console.log('Zoomed Out:', newPixelPerDay);
    };
 
    const handleSetTaskDetails = (task: TimelineTask) => {
       setTaskDetails(task);
-      updatedData(task.id, taskDetails || {});
+      updatedRowsWithTasks(task.id, taskDetails || {});
    };
 
    return (
@@ -116,9 +114,15 @@ const TimelineView = ({
             } h-[500px] border border-gray-300 rounded overflow-scroll`}
          >
             <div className="grid grid-cols-[200px_auto] overflow-scroll">
-               {data && sideBarOpen && <RowDetailsSideBar data={data} />}
+               {rowsWithTasks && sideBarOpen && (
+                  <RowDetailsSideBar rowsWithTasks={rowsWithTasks} />
+               )}
                <button
-                  aria-label={!sideBarOpen ? 'Open Rows Details Sidebar' : 'Close Rows Details Sidebar'}
+                  aria-label={
+                     !sideBarOpen
+                        ? 'Open Rows Details Sidebar'
+                        : 'Close Rows Details Sidebar'
+                  }
                   className={`absolute z-11 bottom-8 bg-white rounded-full ring-1 ring-gray-300 p-2 ${
                      sideBarOpen ? 'left-45' : 'left-2'
                   }`}
@@ -150,16 +154,16 @@ const TimelineView = ({
                      <TimelineLabel monthArr={monthArr} dateArr={arr} />
 
                      {/* Timeline rows with tasks */}
-                     {data.map((row) => (
+                     {rowsWithTasks.map((row) => (
                         <TimelineRow
                            key={row.id}
                            row={row}
                            minDate={minDate}
                            setTaskIdDetail={setTaskIdDetail}
-                           updatedData={updatedData}
+                           updatedRowsWithTasks={updatedRowsWithTasks}
                         />
                      ))}
-                     {data.length === 0 && (
+                     {rowsWithTasks.length === 0 && (
                         <p className="text-center my-5">No rows available</p>
                      )}
                   </div>

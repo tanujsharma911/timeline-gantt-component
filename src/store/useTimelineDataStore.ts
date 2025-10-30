@@ -1,14 +1,14 @@
 import { create } from 'zustand';
-import type { TimelineTask } from '../components/Timeline/TimelineView.types';
+import type { TimelineTask } from '../types/timeline.types';
 
 interface TimelineDataState {
-   data: {
+   rowsWithTasks: {
       tasks: TimelineTask[];
       id: string;
       label: string;
       avatar?: string | undefined;
    }[];
-   setData: (
+   setRowsWithTasks: (
       data: {
          tasks: TimelineTask[];
          id: string;
@@ -17,54 +17,54 @@ interface TimelineDataState {
       }[]
    ) => void;
    moveTask: (taskId: string, newRowId: string) => void;
-   updatedData: (taskId: string, task: Partial<TimelineTask>) => void;
+   updatedRowsWithTasks: (taskId: string, task: Partial<TimelineTask>) => void;
    deleteTask: (taskId: string) => void;
 }
 
 export const useTimelineDataStore = create<TimelineDataState>((set) => ({
-   data: [],
+   rowsWithTasks: [], // Store rows with their tasks
 
-   setData: (data) => set({ data }),
+   setRowsWithTasks: (rowsWithTasks) => set({ rowsWithTasks }),
 
    moveTask: (taskId, newRowId) =>
       set((state) => {
          // Create copy
-         const updatedData = [...state.data];
+         const updatedRowsWithTasks = [...state.rowsWithTasks];
 
          //  Find the source row containing the task
-         const sourceRowIndex = updatedData.findIndex((row) =>
+         const sourceRowIndex = updatedRowsWithTasks.findIndex((row) =>
             row.tasks.some((t) => t.id === taskId)
          );
          if (sourceRowIndex === -1) return state;
 
          // Find the target row
-         const targetRowIndex = updatedData.findIndex(
+         const targetRowIndex = updatedRowsWithTasks.findIndex(
             (row) => row.id === newRowId
          );
          if (targetRowIndex === -1) return state;
 
          // Get the task to move
-         const taskToMove = updatedData[sourceRowIndex].tasks.find(
+         const taskToMove = updatedRowsWithTasks[sourceRowIndex].tasks.find(
             (t) => t.id === taskId
          );
          if (!taskToMove) return state;
 
-         updatedData[sourceRowIndex].tasks = updatedData[
+         updatedRowsWithTasks[sourceRowIndex].tasks = updatedRowsWithTasks[
             sourceRowIndex
          ].tasks.filter((t) => t.id !== taskId);
 
          const movedTask = { ...taskToMove, rowId: newRowId };
-         updatedData[targetRowIndex].tasks = [
-            ...updatedData[targetRowIndex].tasks,
+         updatedRowsWithTasks[targetRowIndex].tasks = [
+            ...updatedRowsWithTasks[targetRowIndex].tasks,
             movedTask,
          ];
 
-         return { data: updatedData };
+         return { rowsWithTasks: updatedRowsWithTasks };
       }),
-   updatedData: (taskId, taskUpdate) => {
+   updatedRowsWithTasks: (taskId, taskUpdate) => {
       set((state) => {
          // 1. Create a new `data` (rows) array
-         const newData = state.data.map((row) => {
+         const newData = state.rowsWithTasks.map((row) => {
             // 2. Find the index of the task in this row
             const taskIndex = row.tasks.findIndex((t) => t.id === taskId);
 
@@ -97,18 +97,18 @@ export const useTimelineDataStore = create<TimelineDataState>((set) => ({
          });
 
          // 8. Return the new state
-         return { data: newData };
+         return { rowsWithTasks: newData };
       });
    },
    deleteTask: (taskId) => {
       set((state) => {
-         const newData = state.data.map((row) => {
+         const newData = state.rowsWithTasks.map((row) => {
             return {
                ...row,
                tasks: row.tasks.filter((task) => task.id !== taskId),
             };
          });
-         return { data: newData };
+         return { rowsWithTasks: newData };
       });
    },
 }));

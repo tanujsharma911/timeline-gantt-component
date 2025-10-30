@@ -1,7 +1,7 @@
 import type {
    TimelineRowType,
    TimelineTask,
-} from '../components/Timeline/TimelineView.types';
+} from '../types/timeline.types';
 
 export const sampleRows: TimelineRowType[] = [
    {

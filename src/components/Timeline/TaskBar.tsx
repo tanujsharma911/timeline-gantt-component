@@ -1,4 +1,4 @@
-import type { TimelineTask } from './TimelineView.types';
+import type { TimelineTask } from '../../types/timeline.types';
 
 import { calculatePosition } from '../../utils/position.utils';
 import { useDragAndDrop } from '../../hooks/useDragAndDrop';
@@ -16,14 +16,14 @@ interface TaskBarProps {
    task: TaskWithLevel;
    minDate?: Date;
    setTaskIdDetail: (id: string | null) => void;
-   updatedData: (taskId: string, updatedTask: TimelineTask) => void;
+   updatedRowsWithTasks: (taskId: string, updatedTask: TimelineTask) => void;
 }
 
 const TaskBar = ({
    task,
    minDate,
    setTaskIdDetail,
-   updatedData,
+   updatedRowsWithTasks,
 }: TaskBarProps) => {
    const { pixelPerDay } = useTimelineZoom();
    const taskRef = useRef<HTMLDivElement | null>(null);
@@ -102,7 +102,7 @@ const TaskBar = ({
                task.startDate.getTime() + deltaDays * msPerDay;
             const newStartDate = new Date(newStartTime);
 
-            updatedData(task.id, { ...task, startDate: newStartDate });
+            updatedRowsWithTasks(task.id, { ...task, startDate: newStartDate });
          } else if (dragState.activeHandle === 'right') {
             // Right Handle Logic: Calculate new End Date
             const finalWidth = parseFloat(finalStyles.width);
@@ -113,7 +113,7 @@ const TaskBar = ({
             const newEndTime = task.endDate.getTime() + deltaDays * msPerDay;
             const newEndDate = new Date(newEndTime);
 
-            updatedData(task.id, { ...task, endDate: newEndDate });
+            updatedRowsWithTasks(task.id, { ...task, endDate: newEndDate });
          }
 
          dragState.activeHandle = null;

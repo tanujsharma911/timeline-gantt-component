@@ -1,9 +1,9 @@
-import type { TimelineTask } from './TimelineView.types';
+import type { TimelineTask } from '../../types/timeline.types';
 
 import { calculateMaxOverlaps } from '../../utils/position.utils';
 
 interface RowDetailsSideBarProps {
-   rows: {
+   rowsWithTasks: {
       tasks: TimelineTask[];
       id: string;
       label: string;
@@ -12,13 +12,13 @@ interface RowDetailsSideBarProps {
 }
 
 const RowDetailsSideBar = ({
-   data,
+   rowsWithTasks,
 }: {
-   data: RowDetailsSideBarProps['rows'];
+   rowsWithTasks: RowDetailsSideBarProps['rowsWithTasks'];
 }) => {
    return (
       <div className={` mt-[106px] sticky left-0 z-10 bg-white w-[200px]`}>
-         {data.map((row) => {
+         {rowsWithTasks.map((row) => {
             const maxOverlaps = calculateMaxOverlaps(row.tasks);
             return (
                <div
@@ -30,7 +30,7 @@ const RowDetailsSideBar = ({
                </div>
             );
          })}
-         {data.length === 0 && (
+         {rowsWithTasks.length === 0 && (
             <div className="ring ring-gray-300 flex justify-center items-center h-full">
                <p className="my-auto text-center">No rows available</p>
             </div>

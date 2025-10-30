@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { CircleX } from 'lucide-react';
-import type { TimelineTask } from './TimelineView.types';
+import type { TimelineTask } from '../../types/timeline.types';
 
 import Button from '../primitives/Button';
 
