@@ -1,6 +1,9 @@
+import { useEffect, useState } from 'react';
+
 import PropTypes from 'prop-types';
 import { ChevronRight } from 'lucide-react';
 
+// Import components
 import TimelineRow from './TimelineRow';
 import TaskDetailSidebar from './TaskDetailSidebar';
 import RowDetailsSideBar from './RowDetailsSideBar';
@@ -8,19 +11,23 @@ import TimelineLabel from './TimelineLabel';
 import Zoom from './Zoom';
 import CurrentVerticalLine from './CurrentTimeLine';
 
-import { useTimelineDataStore } from '../../store/useTimelineDataStore';
+// Import custom hooks
+import { useZoom } from '../../hooks/useZoom';
 
+// Import zustand stores
+import { useTimelineDataStore } from '../../store/useTimelineDataStore';
+import { useTimelineZoom } from '../../store/useTimelineZoom';
+
+// Import utils and types
 import { attachTasksToRows } from '../../utils/formatting.utils';
-import type { TimelineTask, TimelineRowType } from '../../types/timeline.types';
 import {
    getTimelineDateRange,
    generateTimeScale,
    generateMonthScale,
 } from '../../utils/date.utils';
+import { positionOfCurrentDate } from '../../utils/position.utils';
 
-// import { pixelPerDay } from '../../constants/timeline.constants';
-import { useTimelineZoom } from '../../store/useTimelineZoom';
-import { useEffect, useState } from 'react';
+import type { TimelineTask, TimelineRowType } from '../../types/timeline.types';
 
 interface props {
    rows: TimelineRowType[];
@@ -37,20 +44,30 @@ const TimelineView = ({
    sidebarOpenDefault = true,
    mobileView,
 }: props) => {
+   const { pixelPerDay, setPixelPerDay } = useTimelineZoom();
+
    const { rowsWithTasks, setRowsWithTasks, updatedRowsWithTasks, deleteTask } =
       useTimelineDataStore();
-   const { pixelPerDay, setPixelPerDay, increaseZoom, decreaseZoom } =
-      useTimelineZoom();
+
+   const { zoomIn, zoomOut } = useZoom();
+
+   // for task details sidebar
    const [taskIdDetail, setTaskIdDetail] = useState<string | null>(null);
    const [taskDetails, setTaskDetails] = useState<TimelineTask | null>(null);
    const [sideBarOpen, setSideBarOpen] = useState(sidebarOpenDefault);
+
+   const handleSetTaskDetails = (task: TimelineTask) => {
+      setTaskDetails(task);
+      updatedRowsWithTasks(task.id, taskDetails || {});
+   };
 
    // Rearranging tasks into their respective rows
    const temp = attachTasksToRows(rows, tasks);
 
    useEffect(() => {
-      // find task details
+      // Setting task details when taskIdDetail changes
       if (taskIdDetail) {
+         // Finding the task in rowsWithTasks
          for (const row of rowsWithTasks) {
             const foundTask = row.tasks.find(
                (task) => task.id === taskIdDetail
@@ -63,48 +80,29 @@ const TimelineView = ({
       } else {
          setTaskDetails(null);
       }
-
    }, [taskIdDetail]);
 
+   // Setting rowsWithTasks in zustand on component mount
    useEffect(() => {
       setRowsWithTasks(temp);
+      console.log('Setting rows with tasks:', JSON.stringify(temp));
    }, []);
 
    // Determine timeline date range
    const { minDate, maxDate } = getTimelineDateRange(tasks);
 
    // Determine offset for today line
-   const today = new Date();
-   const msPerDay = 1000 * 60 * 60 * 24;
-   const daysFromStartToToday = Math.floor(
-      (today.getTime() - minDate.getTime()) / msPerDay
-   );
+   const daysFromStartToToday = positionOfCurrentDate(minDate);
 
    // Create list of days
-   const arr: Array<{ date: Date; label: string }> = generateTimeScale(
+   const dateArr: Array<{ date: Date; label: string }> = generateTimeScale(
       minDate,
       maxDate
    );
 
    // Create list of months
-   const monthArr = generateMonthScale(minDate, maxDate);
-
-   const zoomIn = () => {
-      if (pixelPerDay >= 70) return;
-      increaseZoom();
-      const newPixelPerDay = pixelPerDay;
-      console.log('Zoomed In:', newPixelPerDay);
-   };
-
-   const zoomOut = () => {
-      if (pixelPerDay <= 10) return;
-      decreaseZoom();
-   };
-
-   const handleSetTaskDetails = (task: TimelineTask) => {
-      setTaskDetails(task);
-      updatedRowsWithTasks(task.id, taskDetails || {});
-   };
+   const monthArr: Array<{ month: string; days: number; date: Date }> =
+      generateMonthScale(minDate, maxDate);
 
    return (
       <div className={`${mobileView ? 'w-md' : 'w-full'}`}>
@@ -114,9 +112,12 @@ const TimelineView = ({
             } h-[500px] border border-gray-300 rounded overflow-scroll`}
          >
             <div className="grid grid-cols-[200px_auto] overflow-scroll">
+               {/* Rows Details Side panel */}
                {rowsWithTasks && sideBarOpen && (
                   <RowDetailsSideBar rowsWithTasks={rowsWithTasks} />
                )}
+
+               {/* Toggle Rows Details Side panel */}
                <button
                   aria-label={
                      !sideBarOpen
@@ -142,6 +143,8 @@ const TimelineView = ({
                      }`}
                   />
                </button>
+
+               {/* Timeline chart */}
                <div className="flex flex-col gap-2 relative w-fit h-fit rounded bg-white">
                   <div className="overflow-x-auto relative border-b border-gray-300">
                      {/* Current day red line */}
@@ -151,7 +154,7 @@ const TimelineView = ({
                      />
 
                      {/* Timeline labels */}
-                     <TimelineLabel monthArr={monthArr} dateArr={arr} />
+                     <TimelineLabel monthArr={monthArr} dateArr={dateArr} />
 
                      {/* Timeline rows with tasks */}
                      {rowsWithTasks.map((row) => (
@@ -170,6 +173,7 @@ const TimelineView = ({
                </div>
             </div>
 
+            {/* Task details side panel */}
             {!!taskDetails && (
                <TaskDetailSidebar
                   taskDetails={taskDetails}
@@ -180,6 +184,7 @@ const TimelineView = ({
                />
             )}
          </div>
+
          {zoom && (
             <Zoom
                pixelPerDay={pixelPerDay}

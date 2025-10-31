@@ -1,8 +1,12 @@
-import { useDragAndDrop } from '../../hooks/useDragAndDrop';
 import { useMemo } from 'react';
 
+// Import components
 import TaskBar from './TaskBar';
 
+// Import custom hooks
+import { useDragAndDrop } from '../../hooks/useDragAndDrop';
+
+// Import types & utils
 import type { TimelineTask } from '../../types/timeline.types';
 import { calculateMaxOverlaps } from '../../utils/position.utils';
 import { calculateTaskLevels } from '../../utils/formatting.utils';
@@ -28,6 +32,7 @@ const TimelineRow = ({
    const { onDrop, onDragOver } = useDragAndDrop(undefined, row.id);
    const maxOverlaps = calculateMaxOverlaps(row.tasks);
 
+   // Recalculate task levels when row.tasks change
    const tasksWithLevels = useMemo(
       () => calculateTaskLevels(row.tasks),
       [row.tasks]

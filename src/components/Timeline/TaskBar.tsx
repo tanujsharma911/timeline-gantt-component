@@ -1,12 +1,14 @@
-import type { TimelineTask } from '../../types/timeline.types';
+import { useRef } from 'react';
 
-import { calculatePosition } from '../../utils/position.utils';
+// Import custom hooks
 import { useDragAndDrop } from '../../hooks/useDragAndDrop';
+import { useTaskResize } from '../../hooks/useTaskResize';
 
-// import { pixelPerDay } from '../../constants/timeline.constants';
+// Import zustand store
 import { useTimelineZoom } from '../../store/useTimelineZoom';
 
-import { useEffect, useRef } from 'react';
+import { calculatePosition } from '../../utils/position.utils';
+import type { TimelineTask } from '../../types/timeline.types';
 
 type TaskWithLevel = TimelineTask & {
    level: number;
@@ -26,17 +28,15 @@ const TaskBar = ({
    updatedRowsWithTasks,
 }: TaskBarProps) => {
    const { pixelPerDay } = useTimelineZoom();
-   const taskRef = useRef<HTMLDivElement | null>(null);
-   const refLeftHandle = useRef<HTMLDivElement | null>(null);
-   const refRightHandle = useRef<HTMLDivElement | null>(null);
+   const taskRef = useRef<HTMLDivElement>(null!);
+   const refLeftHandle = useRef<HTMLDivElement>(null!);
+   const refRightHandle = useRef<HTMLDivElement>(null!);
 
-   // Calculate duration of task in days
-   const msPerDay = 1000 * 60 * 60 * 24;
-   const workOfDays =
-      (task.endDate.getTime() - task.startDate.getTime()) / msPerDay + 1;
-
-   // Calculate position
+   // Calculate position & width
    const offset = calculatePosition(task.startDate, minDate, pixelPerDay);
+   const width =
+      calculatePosition(task.endDate, task.startDate, pixelPerDay) +
+      pixelPerDay;
 
    const { onDragStart, onDragOver } = useDragAndDrop(task.id);
 
@@ -50,124 +50,16 @@ const TaskBar = ({
       }
    };
 
-   //  Edit task resizing logic
-   useEffect(() => {
-      const taskElement = taskRef.current;
-      const leftHandle = refLeftHandle.current;
-      const rightHandle = refRightHandle.current;
-
-      if (!taskElement || !leftHandle || !rightHandle) return;
-
-      const dragState = {
-         startWidth: 0,
-         startLeft: 0,
-         startX: 0,
-         activeHandle: null as 'left' | 'right' | null,
-      };
-
-      const onMouseMove = (e: MouseEvent) => {
-         const deltaX = e.clientX - dragState.startX;
-
-         if (dragState.activeHandle === 'left') {
-            const newWidth = dragState.startWidth - deltaX;
-            const newLeft = dragState.startLeft + deltaX;
-
-            if (newWidth >= pixelPerDay) {
-               taskElement.style.width = `${newWidth}px`;
-               taskElement.style.left = `${newLeft}px`;
-            }
-         } else if (dragState.activeHandle === 'right') {
-            const newWidth = dragState.startWidth + deltaX;
-            if (newWidth >= pixelPerDay) {
-               taskElement.style.width = `${newWidth}px`;
-            }
-         }
-      };
-
-      const onMouseUp = () => {
-         // Only run if a drag was active
-         if (!dragState.activeHandle) return;
-
-         const msPerDay = 1000 * 60 * 60 * 24;
-         const finalStyles = getComputedStyle(taskElement);
-
-         if (dragState.activeHandle === 'left') {
-            // Left Handle Logic: Calculate new Start Date
-            const finalLeft = parseFloat(finalStyles.left);
-            const deltaPixels = finalLeft - dragState.startLeft;
-            const deltaDays = Math.round(deltaPixels / pixelPerDay);
-
-            // Calculate new start time from the original start date
-            const newStartTime =
-               task.startDate.getTime() + deltaDays * msPerDay;
-            const newStartDate = new Date(newStartTime);
-
-            updatedRowsWithTasks(task.id, { ...task, startDate: newStartDate });
-         } else if (dragState.activeHandle === 'right') {
-            // Right Handle Logic: Calculate new End Date
-            const finalWidth = parseFloat(finalStyles.width);
-            const deltaPixels = finalWidth - dragState.startWidth;
-            const deltaDays = Math.round(deltaPixels / pixelPerDay);
-
-            // Calculate new end time from the original end date
-            const newEndTime = task.endDate.getTime() + deltaDays * msPerDay;
-            const newEndDate = new Date(newEndTime);
-
-            updatedRowsWithTasks(task.id, { ...task, endDate: newEndDate });
-         }
-
-         dragState.activeHandle = null;
-         window.removeEventListener('mousemove', onMouseMove);
-         window.removeEventListener('mouseup', onMouseUp);
-         setTimeout(() => setTaskIdDetail(null), 50);
-      };
-
-      const onMouseDownLeft = (e: MouseEvent) => {
-         e.preventDefault();
-         e.stopPropagation();
-
-         const styles = getComputedStyle(taskElement);
-         dragState.startWidth = parseFloat(styles.width);
-         dragState.startLeft = parseFloat(styles.left);
-         dragState.startX = e.clientX;
-         dragState.activeHandle = 'left';
-
-         window.addEventListener('mousemove', onMouseMove);
-         window.addEventListener('mouseup', onMouseUp);
-      };
-
-      const onMouseDownRight = (e: MouseEvent) => {
-         e.preventDefault();
-         e.stopPropagation();
-
-         const styles = getComputedStyle(taskElement);
-         dragState.startWidth = parseFloat(styles.width);
-         dragState.startLeft = parseFloat(styles.left);
-         dragState.startX = e.clientX;
-         dragState.activeHandle = 'right';
-
-         window.addEventListener('mousemove', onMouseMove);
-         window.addEventListener('mouseup', onMouseUp);
-      };
-
-      leftHandle.addEventListener('mousedown', onMouseDownLeft);
-      rightHandle.addEventListener('mousedown', onMouseDownRight);
-
-      return () => {
-         leftHandle.removeEventListener('mousedown', onMouseDownLeft);
-         rightHandle.removeEventListener('mousedown', onMouseDownRight);
-
-         window.removeEventListener('mousemove', onMouseMove);
-         window.removeEventListener('mouseup', onMouseUp);
-      };
-   }, [
+   //  resizing behavior to timeline task bars
+   useTaskResize({
       taskRef,
       refLeftHandle,
       refRightHandle,
-      task.startDate,
-      task.endDate,
+      task,
       pixelPerDay,
-   ]);
+      updatedRowsWithTasks,
+      setTaskIdDetail,
+   });
 
    return (
       <div
@@ -180,7 +72,7 @@ const TaskBar = ({
          className="absolute rounded shadow-sm cursor-move hover:shadow-lg transition-shadow tabIndex-0 focus:outline-2 focus:outline-blue-500"
          style={{
             left: `${offset}px`,
-            width: `${workOfDays * pixelPerDay}px`,
+            width: `${width}px`,
             top:
                task.level === 0
                   ? '8px'

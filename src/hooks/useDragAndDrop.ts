@@ -10,8 +10,6 @@ export const useDragAndDrop = (
       if (!taskId) return;
       e.dataTransfer.setData('task', taskId);
       e.dataTransfer.effectAllowed = 'move';
-
-      console.log('Drag started for task:', taskId);
    };
 
    const onDragOver = (e: React.DragEvent<HTMLDivElement>) => {
@@ -21,7 +19,6 @@ export const useDragAndDrop = (
    const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
       if (!rowId || !moveTask) return;
       const taskId = e.dataTransfer.getData('task');
-      console.log('Dropped task:', taskId, 'on row:', rowId);
 
       moveTask(taskId, rowId);
    };

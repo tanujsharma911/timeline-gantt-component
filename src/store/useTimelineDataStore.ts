@@ -49,21 +49,25 @@ export const useTimelineDataStore = create<TimelineDataState>((set) => ({
          );
          if (!taskToMove) return state;
 
+         // Remove task from source row
          updatedRowsWithTasks[sourceRowIndex].tasks = updatedRowsWithTasks[
             sourceRowIndex
          ].tasks.filter((t) => t.id !== taskId);
 
+         // Change the rowId of the taskId
          const movedTask = { ...taskToMove, rowId: newRowId };
+
+         // Add task to target row
          updatedRowsWithTasks[targetRowIndex].tasks = [
             ...updatedRowsWithTasks[targetRowIndex].tasks,
             movedTask,
          ];
 
          return { rowsWithTasks: updatedRowsWithTasks };
-      }),
+      }
+   ),
    updatedRowsWithTasks: (taskId, taskUpdate) => {
       set((state) => {
-         // 1. Create a new `data` (rows) array
          const newData = state.rowsWithTasks.map((row) => {
             // 2. Find the index of the task in this row
             const taskIndex = row.tasks.findIndex((t) => t.id === taskId);
@@ -85,7 +89,7 @@ export const useTimelineDataStore = create<TimelineDataState>((set) => ({
                // 6. This is the one! Return a new task object
                return {
                   ...oldTask,
-                  ...taskUpdate, // Apply the partial updates
+                  ...taskUpdate,
                };
             });
 
